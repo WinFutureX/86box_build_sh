@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # action defs
-UPDATE_REPO=n
-BUILD_EXE=n
+UPDATE_REPO=y
+BUILD_EXE=y
 BUILD_REGULAR=y # depends on BUILD_EXE
 BUILD_DEBUG=y # same
 BUILD_OPTIMISED=y # ditto
-UPDATE_ROMS=n
+UPDATE_ROMS=y
 
 # build vars
 DEV_BUILD=y
