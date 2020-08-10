@@ -25,6 +25,9 @@ SRCDIR=$ROOTDIR/src
 OUTDIR=$ROOTDIR/out
 ROMDIR=$OUTDIR/roms
 
+# trap defs
+trap abort INT
+
 # func defs
 printb()
 {
@@ -51,6 +54,11 @@ fatal()
 	printb fatal "$1"
 	scriptdate e
 	exit 1
+}
+
+abort()
+{
+	fatal "Script interrupted by user"
 }
 
 run()
@@ -97,7 +105,7 @@ build()
 		make -f win/Makefile.mingw \
 			-j$J \
 			VNC=n \
-			DEV_BUILD=$DEVBUILD \
+			DEV_BUILD=$DEV_BUILD \
 			X64=$X64 \
 			DEBUG=$1 \
 			OPTIM=$2"
@@ -153,6 +161,7 @@ if [[ $UPDATE_REPO == y ]]; then
 	proc=repo
 	log "Repo update in progress"
 	run "git pull -q"
+	log "Repo update completed"
 fi
 gitrev "sources"
 if [[ $BUILD_EXE == y ]]; then
@@ -169,6 +178,7 @@ if [[ $BUILD_EXE == y ]]; then
 		log "Regular build in progress"
 		build n n n
 		run "cp 86Box.exe $OUTDIR/$outexe"
+		log "Regular build completed"
 	fi
 	if [[ $BUILD_DEBUG == y ]]; then
 		if [[ $X64 == y ]]; then
@@ -179,6 +189,7 @@ if [[ $BUILD_EXE == y ]]; then
 		log "Debug build in progress"
 		build y n o
 		run "cp 86Box.exe $OUTDIR/$outexe"
+		log "Debug build completed"
 	fi
 	if [[ $BUILD_OPTIMISED == y ]]; then
 		if [[ $X64 == y ]]; then
@@ -187,17 +198,18 @@ if [[ $BUILD_EXE == y ]]; then
 			outexe=86Box_opt.exe
 		fi
 		log "Optimised build in progress"
-		#build y y n
-		build y n s
+		build y y n
 		run "cp 86Box.exe $OUTDIR/$outexe"
+		log "Optimised build completed"
 	fi
 fi
 if [[ $UPDATE_ROMS == y ]]; then
 	proc=roms
 	log "Switching to ROM dir"
 	run "cd $ROMDIR"
-	log "Now updating ROMs"
+	log "ROM update in progress"
 	run "git pull -q"
+	log "ROM update completed"
 fi
 gitrev "ROMs"
 if [[ $proc != start ]]; then
