@@ -17,7 +17,6 @@ elif [[ $(UNAME) == "MINGW32"* ]]; then
 	X64=n
 else
 	fatal "Unknown platform"
-	exit 1
 fi
 
 # dir defs
