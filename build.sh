@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# build vars
-if [[ $(UNAME) == "MINGW64"* ]]; then
-	X64=y
-elif [[ $(UNAME) == "MINGW32"* ]]; then
-	X64=n
-else
-	fatal "Unknown platform"
-fi
-
 # dir defs
 ROOTDIR=~/86Box
 SRCDIR=$ROOTDIR/src
@@ -164,6 +155,13 @@ echo "*                               *"
 echo "*********************************"
 echo ""
 proc=start
+if [[ $(UNAME -s) == "MINGW64"* ]]; then
+	X64=y
+elif [[ $(UNAME -s) == "MINGW32"* ]]; then
+	X64=n
+else
+	fatal "Unknown target platform"
+fi
 if [[ $# == 0 ]]; then log "No arguments specified, using defaults"; fi
 for a in "$@"; do
 	arg=$a
