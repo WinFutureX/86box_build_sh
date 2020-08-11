@@ -1,15 +1,6 @@
 #!/bin/bash
 
-# action defs
-#UPDATE_REPO=$2
-#UPDATE_ROMS=$3
-#BUILD_REGULAR=$4
-#BUILD_DEBUG=$5
-#BUILD_OPTIMISED=$6
-
 # build vars
-#DEV_BUILD=$1
-#J=$7
 if [[ $(UNAME) == "MINGW64"* ]]; then
 	X64=y
 elif [[ $(UNAME) == "MINGW32"* ]]; then
