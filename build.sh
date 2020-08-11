@@ -162,7 +162,9 @@ elif [[ $(UNAME -s) == "MINGW32"* ]]; then
 else
 	fatal "Unknown target platform"
 fi
-if [[ $# == 0 ]]; then log "No arguments specified, using defaults"; fi
+if [[ $# == 0 && UPDATE_REPO == "" && UPDATE_ROMS == "" && BUILD_REGULAR == "" ]]; then
+	log "No arguments specified, using defaults"
+fi
 for a in "$@"; do
 	arg=$a
 	if [[ "$arg" == "DEV_BUILD="* ]]; then
