@@ -1,16 +1,15 @@
 #!/bin/bash
 
 # action defs
-UPDATE_REPO=y
-BUILD_EXE=y
-BUILD_REGULAR=y # depends on BUILD_EXE
-BUILD_DEBUG=y # same
-BUILD_OPTIMISED=y # ditto
-UPDATE_ROMS=y
+#UPDATE_REPO=$2
+#UPDATE_ROMS=$3
+#BUILD_REGULAR=$4
+#BUILD_DEBUG=$5
+#BUILD_OPTIMISED=$6
 
 # build vars
-DEV_BUILD=y
-J=4
+#DEV_BUILD=$1
+#J=$7
 if [[ $(UNAME) == "MINGW64"* ]]; then
 	X64=y
 elif [[ $(UNAME) == "MINGW32"* ]]; then
@@ -29,6 +28,18 @@ ROMDIR=$OUTDIR/roms
 trap abort INT
 
 # func defs
+usage()
+{
+	echo "Usage: ./build.sh [OPTIONS] [-a/--all]"
+	echo ""
+	echo "    -a, --all: updates all repos and build all targets."
+	echo ""
+	echo "By default, without any arguments, it updates the source and ROM repos and only builds the regular version."
+	echo ""
+	echo "For example, to only build the debug configuration on 2 CPU threads:"
+	echo "$ ./build.sh UPDATE_REPO=n UPDATE_ROMS=n BUILD_REGULAR=n BUILD_DEBUG=y -j2"
+}
+
 printb()
 {
 	echo "[$1] $2"
@@ -56,9 +67,22 @@ fatal()
 	exit 1
 }
 
+fatal2()
+{
+	printb fatal "$1"
+}
+
 abort()
 {
 	fatal "Script interrupted by user"
+}
+
+checkyn()
+{
+	if [[ $1 != "y" && $1 != "n" ]]; then
+		fatal2 "Invalid option in argument(s), check command line"
+		exit 1
+	fi
 }
 
 run()
@@ -85,6 +109,7 @@ build()
 			-j$J \
 			VNC=n \
 			DEV_BUILD=$DEV_BUILD \
+			NEW_DYNAREC=$NEW_DYNAREC \
 			X64=$X64 \
 			DEBUG=$1 \
 			OPTIM=n \
@@ -96,6 +121,7 @@ build()
 			-j$J \
 			VNC=n \
 			DEV_BUILD=$DEV_BUILD \
+			NEW_DYNAREC=$NEW_DYNAREC \
 			X64=$X64 \
 			DEBUG=$1 \
 			OPTIM=n \
@@ -106,6 +132,7 @@ build()
 			-j$J \
 			VNC=n \
 			DEV_BUILD=$DEV_BUILD \
+			NEW_DYNAREC=$NEW_DYNAREC \
 			X64=$X64 \
 			DEBUG=$1 \
 			OPTIM=$2"
@@ -146,6 +173,59 @@ echo "*                               *"
 echo "*********************************"
 echo ""
 proc=start
+if [[ $# == 0 ]]; then log "No arguments specified, using defaults"; fi
+for a in "$@"; do
+	arg=$a
+	if [[ "$arg" == "DEV_BUILD="* ]]; then
+		DEV_BUILD="${arg/'DEV_BUILD='}"
+	elif [[ "$arg" == "NEW_DYNAREC="* ]]; then
+		NEW_DYNAREC="${arg/'NEW_DYNAREC='}"
+	elif [[ "$arg" == "UPDATE_REPO="* ]]; then
+		UPDATE_REPO="${arg/'UPDATE_REPO='}"
+	elif [[ "$arg" == "UPDATE_ROMS="* ]]; then
+		UPDATE_ROMS="${arg/'UPDATE_ROMS='}"
+	elif [[ "$arg" == "BUILD_REGULAR="* ]]; then
+		BUILD_REGULAR="${arg/'BUILD_REGULAR='}"
+	elif [[ "$arg" == "BUILD_DEBUG="* ]]; then
+		BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
+	elif [[ "$arg" == "BUILD_OPTIMISED="* ]]; then
+		BUILD_OPTIMISED="${arg/'BUILD_OPTIMISED='}"
+	elif [[ "$arg" == "-j"* ]]; then
+		J="${arg//[^0-9]/}"
+	elif [[ "$arg" == "-a" || "$arg" == "--all" ]]; then
+		DEV_BUILD=y
+		UPDATE_REPO=y
+		UPDATE_ROMS=y
+		BUILD_REGULAR=y
+		BUILD_DEBUG=y
+		BUILD_OPTIMISED=y
+	elif [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+		usage
+		exit 2
+	else
+		fatal2 "Unrecognised argument $arg"
+		exit 1
+	fi
+done
+# set defaults
+if [[ -z "$DEV_BUILD" ]]; then DEV_BUILD=n; fi
+if [[ -z "$NEW_DYNAREC" ]]; then NEW_DYNAREC=n; fi
+if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
+if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
+if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
+if [[ -z "$BUILD_DEBUG" ]]; then BUILD_DEBUG=n; fi
+if [[ -z "$BUILD_OPTIMISED" ]]; then BUILD_OPTIMISED=n; fi
+if [[ -z "$J" ]]; then J=1; fi
+for opt in $DEV_BUILD \
+	$NEW_DYNAREC \
+	$UPDATE_REPO \
+	$UPDATE_ROMS \
+	$BUILD_REGULAR \
+	$BUILD_DEBUG \
+	$BUILD_OPTIMISED; \
+do
+	checkyn $opt
+done
 scriptdate s
 list "Root dir: $ROOTDIR"
 list "Source dir: $SRCDIR"
@@ -164,44 +244,49 @@ if [[ $UPDATE_REPO == y ]]; then
 	log "Repo update completed"
 fi
 gitrev "sources"
-if [[ $BUILD_EXE == y ]]; then
-	proc=build
-	log "Preparing to build EXEs"
-	log "Switching to source dir"
-	run "cd $SRCDIR"
-	if [[ $BUILD_REGULAR == y ]]; then
-		if [[ $X64 == y ]]; then
-			outexe=86Box_64.exe
-		else
-			outexe=86Box.exe
-		fi
-		log "Regular build in progress"
-		build n n n
-		run "cp 86Box.exe $OUTDIR/$outexe"
-		log "Regular build completed"
+log "Switching to source dir"
+run "cd $SRCDIR"
+if [[ $BUILD_REGULAR == y && $BUILD_DEBUG == y && $BUILD_OPTIMISED == y ]]; then
+	log "Building with $J CPU threads"
+fi
+if [[ $NEW_DYNAREC == y ]]; then
+	log "note: new dynarec enabled for this build"
+fi
+if [[ $BUILD_REGULAR == y ]]; then
+	proc=build_r
+	if [[ $X64 == y ]]; then
+		outexe=86Box_64.exe
+	else
+		outexe=86Box.exe
 	fi
-	if [[ $BUILD_DEBUG == y ]]; then
-		if [[ $X64 == y ]]; then
-			outexe=86Box_debug_64.exe
-		else
-			outexe=86Box_debug.exe
-		fi
-		log "Debug build in progress"
-		build y n o
-		run "cp 86Box.exe $OUTDIR/$outexe"
-		log "Debug build completed"
+	log "Regular build in progress"
+	build n n n
+	run "cp 86Box.exe $OUTDIR/$outexe"
+	log "Regular build completed"
+fi
+if [[ $BUILD_DEBUG == y ]]; then
+	proc=build_d
+	if [[ $X64 == y ]]; then
+		outexe=86Box_debug_64.exe
+	else
+		outexe=86Box_debug.exe
 	fi
-	if [[ $BUILD_OPTIMISED == y ]]; then
-		if [[ $X64 == y ]]; then
-			outexe=86Box_opt_64.exe
-		else
-			outexe=86Box_opt.exe
-		fi
-		log "Optimised build in progress"
-		build y y n
-		run "cp 86Box.exe $OUTDIR/$outexe"
-		log "Optimised build completed"
+	log "Debug build in progress"
+	build y n o
+	run "cp 86Box.exe $OUTDIR/$outexe"
+	log "Debug build completed"
+fi
+if [[ $BUILD_OPTIMISED == y ]]; then
+	proc=build_o
+	if [[ $X64 == y ]]; then
+		outexe=86Box_opt_64.exe
+	else
+		outexe=86Box_opt.exe
 	fi
+	log "Optimised build in progress"
+	build y y n
+	run "cp 86Box.exe $OUTDIR/$outexe"
+	log "Optimised build completed"
 fi
 if [[ $UPDATE_ROMS == y ]]; then
 	proc=roms
