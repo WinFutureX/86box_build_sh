@@ -135,7 +135,7 @@ scriptdate()
 	else
 		verb=somethinged # not a real word!
 	fi
-	scripttime=$(date "+%a %d %b %Y %T")
+	scripttime=$(date "+%a %Y/%m/%d %T")
 	log "Script $verb on $scripttime"
 }
 
