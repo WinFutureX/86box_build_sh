@@ -238,7 +238,7 @@ gitrev "sources"
 log "Switching to source dir"
 run "cd $SRCDIR"
 if [[ $BUILD_REGULAR == y && $BUILD_DEBUG == y && $BUILD_OPTIMISED == y ]]; then
-	log "Building with $J CPU threads"
+	log "Building with $J CPU thread(s)"
 fi
 if [[ $NEW_DYNAREC == y ]]; then
 	log "note: new dynarec enabled for this build"
