@@ -179,6 +179,8 @@ for a in "$@"; do
 		BUILD_REGULAR="${arg/'BUILD_REGULAR='}"
 	elif [[ "$arg" == "BUILD_DEBUG="* ]]; then
 		BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
+	elif [[ "$arg" == "BUILD_SIZE="* ]]; then
+		BUILD_SIZE="${arg/'BUILD_SIZE='}"
 	elif [[ "$arg" == "BUILD_OPTIMISED="* ]]; then
 		BUILD_OPTIMISED="${arg/'BUILD_OPTIMISED='}"
 	elif [[ "$arg" == "-j"* ]]; then
@@ -189,6 +191,7 @@ for a in "$@"; do
 		UPDATE_ROMS=y
 		BUILD_REGULAR=y
 		BUILD_DEBUG=y
+		BUILD_SIZE=y
 		BUILD_OPTIMISED=y
 	elif [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
 		usage
@@ -205,6 +208,7 @@ if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
 if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
 if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
 if [[ -z "$BUILD_DEBUG" ]]; then BUILD_DEBUG=n; fi
+if [[ -z "$BUILD_SIZE" ]]; then BUILD_SIZE=n; fi
 if [[ -z "$BUILD_OPTIMISED" ]]; then BUILD_OPTIMISED=n; fi
 if [[ -z "$J" ]]; then J=1; fi
 for opt in $DEV_BUILD \
@@ -213,6 +217,7 @@ for opt in $DEV_BUILD \
 	$UPDATE_ROMS \
 	$BUILD_REGULAR \
 	$BUILD_DEBUG \
+	$BUILD_SIZE \
 	$BUILD_OPTIMISED; \
 do
 	checkyn $opt
@@ -237,7 +242,10 @@ fi
 gitrev "sources"
 log "Switching to source dir"
 run "cd $SRCDIR"
-if [[ $BUILD_REGULAR == y && $BUILD_DEBUG == y && $BUILD_OPTIMISED == y ]]; then
+if [[ $BUILD_REGULAR == y && \
+	$BUILD_DEBUG == y && \
+	$BUILD_SIZE == y && \
+	$BUILD_OPTIMISED == y ]]; then
 	log "Building with $J CPU thread(s)"
 fi
 if [[ $NEW_DYNAREC == y ]]; then
@@ -267,6 +275,18 @@ if [[ $BUILD_DEBUG == y ]]; then
 	run "cp 86Box.exe $OUTDIR/$outexe"
 	log "Debug build completed"
 fi
+if [[ $BUILD_SIZE == y ]]; then
+	proc=build_s
+	if [[ $X64 == y ]]; then
+		outexe=86Box_size_64.exe
+	else
+		outexe=86Box_size.exe
+	fi
+	log "Size-optimised build in progress"
+	build n n s
+	run "cp 86Box.exe $OUTDIR/$outexe"
+	log "Size-optimised build completed"
+fi
 if [[ $BUILD_OPTIMISED == y ]]; then
 	proc=build_o
 	if [[ $X64 == y ]]; then
@@ -275,7 +295,7 @@ if [[ $BUILD_OPTIMISED == y ]]; then
 		outexe=86Box_opt.exe
 	fi
 	log "Optimised build in progress"
-	build y y n
+	build n y n
 	run "cp 86Box.exe $OUTDIR/$outexe"
 	log "Optimised build completed"
 fi
