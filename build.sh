@@ -154,6 +154,7 @@ echo "* 86Box unofficial build script *"
 echo "*                               *"
 echo "*********************************"
 echo ""
+SECONDS=0
 proc=start
 if [[ $(UNAME -s) == "MINGW64"* ]]; then
 	X64=y
@@ -314,5 +315,9 @@ else
 	log "Nothing to do"
 fi
 scriptdate e
+time_h=$(( $SECONDS / 3600 ))
+time_m=$(( $SECONDS % 3600 / 60 ))
+time_s=$(( $SECONDS % 60 ))
+log "Script took $time_h hour(s), $time_m minute(s) and $time_s second(s)"
 exit 0
 
