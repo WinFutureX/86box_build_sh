@@ -144,6 +144,7 @@ gitrev()
 	head_l=$(git rev-parse HEAD)
 	head_s=$(git rev-parse --short HEAD)
 	list "Current local commit of $1: $head_l (short $head_s)"
+	echo "$1: $head_l" > commit_id
 }
 
 # script exec
