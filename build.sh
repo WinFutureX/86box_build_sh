@@ -144,7 +144,6 @@ gitrev()
 	head_l=$(git rev-parse HEAD)
 	head_s=$(git rev-parse --short HEAD)
 	list "Current local commit of $1: $head_l (short $head_s)"
-	echo "$1: $head_l" > commit_id
 }
 
 # script exec
@@ -242,6 +241,7 @@ if [[ $UPDATE_REPO == y ]]; then
 	log "Repo update completed"
 fi
 gitrev "sources"
+echo "source commit: $(git rev-parse HEAD)" > out/commit_id
 log "Switching to source dir"
 run "cd $SRCDIR"
 if [[ $BUILD_REGULAR == y && \
