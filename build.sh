@@ -241,7 +241,7 @@ if [[ $UPDATE_REPO == y ]]; then
 	log "Repo update completed"
 fi
 gitrev "sources"
-echo "source commit: $(git rev-parse HEAD)" > out/commit_id
+echo "source commit: $(git rev-parse HEAD)" > $OUTDIR/commit_id
 log "Switching to source dir"
 run "cd $SRCDIR"
 if [[ $BUILD_REGULAR == y && \
