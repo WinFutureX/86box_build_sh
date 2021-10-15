@@ -5,6 +5,7 @@ ROOTDIR=~/86Box
 SRCDIR=$ROOTDIR/src
 OUTDIR=$ROOTDIR/out
 ROMDIR=$OUTDIR/roms
+MAKEFILE=win/Makefile.mingw # todo: allow makefiles other than default
 
 # trap defs
 trap abort INT
@@ -78,7 +79,7 @@ run()
 
 clean()
 {
-	run "make -f win/Makefile.mingw clean"
+	run "make -f $MAKEFILE clean"
 }
 
 build()
@@ -87,7 +88,7 @@ build()
 	if [[ $3 == o ]]; then
 		log "build: all optimisations off"
 		cmd="\
-		make -f win/Makefile.mingw \
+		make -f $MAKEFILE \
 			-j$J \
 			VNC=n \
 			DEV_BUILD=$DEV_BUILD \
@@ -99,7 +100,7 @@ build()
 	elif [[ $3 == s ]]; then
 		log "build: optimising for code size"
 		cmd="\
-		make -f win/Makefile.mingw \
+		make -f $MAKEFILE \
 			-j$J \
 			VNC=n \
 			DEV_BUILD=$DEV_BUILD \
@@ -111,7 +112,7 @@ build()
 	elif [[ $3 == g ]]; then
 		log "build: optimising for debugging"
 		cmd="\
-		make -f win/Makefile.mingw \
+		make -f $MAKEFILE \
 			-j$J \
 			VNC=n \
 			DEV_BUILD=$DEV_BUILD \
@@ -122,7 +123,7 @@ build()
 			COPTIM=-Og"
 	else
 		cmd="\
-		make -f win/Makefile.mingw \
+		make -f $MAKEFILE \
 			-j$J \
 			VNC=n \
 			DEV_BUILD=$DEV_BUILD \
