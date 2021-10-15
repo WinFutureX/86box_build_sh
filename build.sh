@@ -169,6 +169,9 @@ echo "*********************************"
 echo ""
 SECONDS=0
 proc=start
+if [[ ! -f "$MAKEFILE" ]]; then
+	fatal "Could not find makefile \"$MAKEFILE\""
+fi
 if [[ $(UNAME -s) == "MINGW64"* ]]; then
 	X64=y
 elif [[ $(UNAME -s) == "MINGW32"* ]]; then
