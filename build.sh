@@ -5,7 +5,7 @@ ROOTDIR=~/86Box
 SRCDIR=$ROOTDIR/src
 OUTDIR=$ROOTDIR/out
 ROMDIR=$OUTDIR/roms
-MAKEFILE=win/Makefile.mingw # todo: allow makefiles other than default
+MAKEFILE=$SRCDIR/win/Makefile.mingw # todo: allow makefiles other than default
 
 # trap defs
 trap abort INT
