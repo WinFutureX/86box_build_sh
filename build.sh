@@ -108,6 +108,18 @@ build()
 			DEBUG=$1 \
 			OPTIM=n \
 			COPTIM=-Os"
+	elif [[ $3 == g ]]; then
+		log "build: optimising for debugging"
+		cmd="\
+		make -f win/Makefile.mingw \
+			-j$J \
+			VNC=n \
+			DEV_BUILD=$DEV_BUILD \
+			NEW_DYNAREC=$NEW_DYNAREC \
+			X64=$X64 \
+			DEBUG=$1 \
+			OPTIM=n \
+			COPTIM=-Og"
 	else
 		cmd="\
 		make -f win/Makefile.mingw \
@@ -273,7 +285,7 @@ if [[ $BUILD_DEBUG == y ]]; then
 		outexe=86Box_debug.exe
 	fi
 	log "Debug build in progress"
-	build y n o
+	build y n g
 	run "cp 86Box.exe $OUTDIR/$outexe"
 	log "Debug build completed"
 fi
