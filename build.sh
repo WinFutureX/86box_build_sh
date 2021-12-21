@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# dir defs
-ROOT_DIR=~/86Box
-SRC_DIR=$ROOT_DIR/src
-OUT_DIR=$ROOT_DIR/out
-ROM_DIR=$OUTDIR/roms
-MAKEFILE=$SRC_DIR/win/Makefile.mingw # todo: allow makefiles other than default
+# dir defs (todo: remove this)
+#ROOT_DIR=~/86Box
+#SRC_DIR=$ROOT_DIR/src
+#BUILD_DIR=$ROOT_DIR/build # cmake builds only
+#OUT_DIR=$ROOT_DIR/out
+#ROM_DIR=$OUT_DIR/roms
+#MAKEFILE=$SRC_DIR/win/Makefile.mingw # todo: allow makefiles other than default
 
 # trap defs
 trap abort INT
@@ -23,6 +24,7 @@ usage()
 	echo "$ ./build.sh UPDATE_REPO=n UPDATE_ROMS=n BUILD_REGULAR=n BUILD_DEBUG=y -j2"
 	echo ""
 	echo "Available build options:"
+	echo "    CMAKE         Build using CMake instead of the traditional makefile method."
 	echo "    DEV_BUILD     Enables experimental features and code."
 	echo "    NEW_DYNAREC   Enables the new dynamic recompiler from PCem."
 	echo "    UPDATE_REPO   Update the main source repository."
@@ -31,6 +33,14 @@ usage()
 	echo "    BUILD_DEBUG   Build a debug executable with symbols."
 	echo "    BUILD_SIZE    Build a size-optimised executable."
 	echo "    BUILD_OPT     Build a CPU-optimised executable."
+	echo ""
+	echo "Available paths:"
+	echo "    ROOT_DIR  Build root directory (default: the folder where this script is run from)."
+	echo "    SRC_DIR   Source files directory (makefile builds only, default: $ROOT_DIR/src)."
+	echo "    BUILD_DIR CMake build directory (CMake builds only, default: $ROOT_DIR/build)."
+	echo "    OUT_DIR   Build output directory (default: $ROOT_DIR/out)."
+	echo "    ROM_DIR   ROM repository directory (default: $OUT_DIR/roms)."
+	echo "    MAKEFILE  Makefile (makefile builds only, default: $SRC_DIR/win/Makefile.mingw)."
 	echo ""
 }
 
@@ -74,7 +84,7 @@ abort()
 check_yn()
 {
 	if [[ $1 != "y" && $1 != "n" ]]; then
-		fatal2 "Invalid option in argument(s), check command line"
+		fatal_early "Invalid option in argument(s), check command line"
 		exit 1
 	fi
 }
@@ -93,55 +103,21 @@ clean()
 	run "make -f $MAKEFILE clean"
 }
 
+# todo: cmake support
 build()
 {
 	clean
 	if [[ $3 == o ]]; then
 		log "build: all optimisations off"
-		cmd="\
-		make -f $MAKEFILE \
-			-j$J \
-			VNC=n \
-			DEV_BUILD=$DEV_BUILD \
-			NEW_DYNAREC=$NEW_DYNAREC \
-			X64=$X64 \
-			DEBUG=$1 \
-			OPTIM=n \
-			COPTIM=-O0"
+		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-O0"
 	elif [[ $3 == s ]]; then
 		log "build: optimising for code size"
-		cmd="\
-		make -f $MAKEFILE \
-			-j$J \
-			VNC=n \
-			DEV_BUILD=$DEV_BUILD \
-			NEW_DYNAREC=$NEW_DYNAREC \
-			X64=$X64 \
-			DEBUG=$1 \
-			OPTIM=n \
-			COPTIM=-Os"
+		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Os"
 	elif [[ $3 == g ]]; then
 		log "build: optimising for debugging"
-		cmd="\
-		make -f $MAKEFILE \
-			-j$J \
-			VNC=n \
-			DEV_BUILD=$DEV_BUILD \
-			NEW_DYNAREC=$NEW_DYNAREC \
-			X64=$X64 \
-			DEBUG=$1 \
-			OPTIM=n \
-			COPTIM=-Og"
+		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Og"
 	else
-		cmd="\
-		make -f $MAKEFILE \
-			-j$J \
-			VNC=n \
-			DEV_BUILD=$DEV_BUILD \
-			NEW_DYNAREC=$NEW_DYNAREC \
-			X64=$X64 \
-			DEBUG=$1 \
-			OPTIM=$2"
+		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
 	fi
 	run "$cmd"
 	exit=$?
@@ -150,17 +126,9 @@ build()
 	fi
 }
 
-scriptdate()
+script_date()
 {
-	if [[ $1 == s ]]; then
-		verb=started
-	elif [[ $1 == e ]]; then
-		verb=ended
-	else
-		verb=somethinged # not a real word!
-	fi
-	scripttime=$(date "+%a %Y/%m/%d %T")
-	log "Script $verb on $scripttime"
+	log "Script ${1}ed on $(date "+%a %Y-%m-%d %T")"
 }
 
 gitrev()
@@ -196,9 +164,16 @@ if [[ $# == 0 && UPDATE_REPO == "" && UPDATE_ROMS == "" && BUILD_REGULAR == "" ]
 	if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
 	if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
 fi
+
+# iterate arguments list
 for a in "$@"; do
 	arg=$a
-	if [[ "$arg" == "DEV_BUILD="* ]]; then
+	if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+		usage
+		exit 2
+	elif [[ "$arg" == "CMAKE="* ]]; then
+		CMAKE="${arg/'CMAKE='}"
+	elif [[ "$arg" == "DEV_BUILD="* ]]; then
 		DEV_BUILD="${arg/'DEV_BUILD='}"
 	elif [[ "$arg" == "NEW_DYNAREC="* ]]; then
 		NEW_DYNAREC="${arg/'NEW_DYNAREC='}"
@@ -214,6 +189,18 @@ for a in "$@"; do
 		BUILD_SIZE="${arg/'BUILD_SIZE='}"
 	elif [[ "$arg" == "BUILD_OPTIMISED="* ]]; then
 		BUILD_OPT="${arg/'BUILD_OPT='}"
+	elif [[ "$arg" == "ROOT_DIR="* ]]; then
+		ROOT_DIR="${arg/'ROOT_DIR='}"
+	elif [[ "$arg" == "SRC_DIR="* ]]; then
+		SRC_DIR="${arg/'SRC_DIR='}"
+	elif [[ "$arg" == "BUILD_DIR="* ]]; then
+		BUILD_DIR="${arg/'BUILD_DIR='}"
+	elif [[ "$arg" == "OUT_DIR="* ]]; then
+		OUT_DIR="${arg/'OUT_DIR='}"
+	elif [[ "$arg" == "ROM_DIR="* ]]; then
+		ROM_DIR="${arg/'ROM_DIR='}"
+	elif [[ "$arg" == "MAKEFILE="* ]]; then
+		MAKEFILE="${arg/'MAKEFILE='}"
 	elif [[ "$arg" == "-j"* ]]; then
 		J="${arg//[^0-9]/}"
 	elif [[ "$arg" == "-a" || "$arg" == "--all" ]]; then
@@ -224,25 +211,38 @@ for a in "$@"; do
 		BUILD_DEBUG=y
 		BUILD_SIZE=y
 		BUILD_OPT=y
-	elif [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
-		usage
-		exit 2
 	else
 		fatal_early "Unrecognised argument $arg"
 		exit 1
 	fi
 done
+
 # set defaults
 if [[ -z "$DEV_BUILD" ]]; then DEV_BUILD=n; fi
 if [[ -z "$NEW_DYNAREC" ]]; then NEW_DYNAREC=n; fi
-if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
-if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
-if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
+#if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
+#if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
+#if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
 if [[ -z "$BUILD_DEBUG" ]]; then BUILD_DEBUG=n; fi
 if [[ -z "$BUILD_SIZE" ]]; then BUILD_SIZE=n; fi
 if [[ -z "$BUILD_OPT" ]]; then BUILD_OPT=n; fi
 if [[ -z "$J" ]]; then J=1; fi
-for opt in $DEV_BUILD \
+if [[ -z "$ROOT_DIR" ]]; then ROOT_DIR=$(pwd); fi
+if [[ -z "$SRC_DIR" ]]; then SRC_DIR=$ROOT_DIR/src; fi
+if [[ -z "$BUILD_DIR" ]]; then BUILD_DIR=$ROOT_DIR/build; fi
+if [[ -z "$OUT_DIR" ]]; then OUT_DIR=$ROOT_DIR/out; fi
+if [[ -z "$ROM_DIR" ]]; then ROM_DIR=$OUT_DIR/roms; fi
+if [[ -z "$MAKEFILE" ]]; then MAKEFILE=$SRC_DIR/win/Makefile.mingw; fi
+
+if [[ ! -d "$ROOT_DIR" ]]; then fatal_early "Root directory \"$ROOT_DIR\" not found."; fi
+if [[ ! -d "$SRC_DIR" ]]; then fatal_early "Source directory \"$SRC_DIR\" not found."; fi
+if [[ ! -d "$BUILD_DIR" ]]; then fatal_early "CMake build directory \"$BUILD_DIR\" not found."; fi
+if [[ ! -d "$OUT_DIR" ]]; then fatal_early "Output directory \"$OUT_DIR\" not found."; fi
+if [[ ! -d "$ROM_DIR" ]]; then fatal_early "ROM directory \"$ROM_DIR\" not found."; fi
+if [[ ! -f "$MAKEFILE" ]]; then fatal_early "Makefile \"$MAKEFILE\" not found."; fi
+
+for opt in $CMAKE \
+	$DEV_BUILD \
 	$NEW_DYNAREC \
 	$UPDATE_REPO \
 	$UPDATE_ROMS \
@@ -253,9 +253,11 @@ for opt in $DEV_BUILD \
 do
 	check_yn $opt
 done
-scriptdate s
+
+script_date start
 list "Root dir: $ROOT_DIR"
 list "Source dir: $SRC_DIR"
+list "CMake build dir: $BUILD_DIR"
 list "Output dir: $OUT_DIR"
 list "ROM dir: $ROM_DIR"
 cd $ROOT_DIR
@@ -345,7 +347,7 @@ if [[ $proc != start ]]; then
 else
 	log "Nothing to do"
 fi
-scriptdate e
+script_date finish
 time_h=$(( $SECONDS / 3600 ))
 time_m=$(( $SECONDS % 3600 / 60 ))
 time_s=$(( $SECONDS % 60 ))
