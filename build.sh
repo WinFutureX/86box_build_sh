@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # dir defs
-ROOTDIR=~/86Box
-SRCDIR=$ROOTDIR/src
-OUTDIR=$ROOTDIR/out
-ROMDIR=$OUTDIR/roms
-MAKEFILE=$SRCDIR/win/Makefile.mingw # todo: allow makefiles other than default
+ROOT_DIR=~/86Box
+SRC_DIR=$ROOT_DIR/src
+OUT_DIR=$ROOT_DIR/out
+ROM_DIR=$OUTDIR/roms
+MAKEFILE=$SRC_DIR/win/Makefile.mingw # todo: allow makefiles other than default
 
 # trap defs
 trap abort INT
@@ -21,6 +21,17 @@ usage()
 	echo ""
 	echo "For example, to only build the debug configuration on 2 CPU threads:"
 	echo "$ ./build.sh UPDATE_REPO=n UPDATE_ROMS=n BUILD_REGULAR=n BUILD_DEBUG=y -j2"
+	echo ""
+	echo "Available build options:"
+	echo "    DEV_BUILD     Enables experimental features and code."
+	echo "    NEW_DYNAREC   Enables the new dynamic recompiler from PCem."
+	echo "    UPDATE_REPO   Update the main source repository."
+	echo "    UPDATE_ROMS   Update the ROM repository."
+	echo "    BUILD_REGULAR Build a normal executable."
+	echo "    BUILD_DEBUG   Build a debug executable with symbols."
+	echo "    BUILD_SIZE    Build a size-optimised executable."
+	echo "    BUILD_OPT     Build a CPU-optimised executable."
+	echo ""
 }
 
 printb()
@@ -50,7 +61,7 @@ fatal()
 	exit 1
 }
 
-fatal2()
+fatal_early()
 {
 	printb fatal "$1"
 }
@@ -60,7 +71,7 @@ abort()
 	fatal "Script interrupted by user"
 }
 
-checkyn()
+check_yn()
 {
 	if [[ $1 != "y" && $1 != "n" ]]; then
 		fatal2 "Invalid option in argument(s), check command line"
@@ -170,17 +181,20 @@ echo ""
 SECONDS=0
 proc=start
 if [[ ! -f "$MAKEFILE" ]]; then
-	fatal2 "Could not find makefile \"$MAKEFILE\""
+	fatal_early "Could not find makefile \"$MAKEFILE\""
 fi
 if [[ $(UNAME -s) == "MINGW64"* ]]; then
 	X64=y
 elif [[ $(UNAME -s) == "MINGW32"* ]]; then
 	X64=n
 else
-	fatal "Unknown target platform"
+	fatal_early "Unknown target platform"
 fi
 if [[ $# == 0 && UPDATE_REPO == "" && UPDATE_ROMS == "" && BUILD_REGULAR == "" ]]; then
 	log "No arguments specified, using defaults"
+	if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
+	if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
+	if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
 fi
 for a in "$@"; do
 	arg=$a
@@ -199,7 +213,7 @@ for a in "$@"; do
 	elif [[ "$arg" == "BUILD_SIZE="* ]]; then
 		BUILD_SIZE="${arg/'BUILD_SIZE='}"
 	elif [[ "$arg" == "BUILD_OPTIMISED="* ]]; then
-		BUILD_OPTIMISED="${arg/'BUILD_OPTIMISED='}"
+		BUILD_OPT="${arg/'BUILD_OPT='}"
 	elif [[ "$arg" == "-j"* ]]; then
 		J="${arg//[^0-9]/}"
 	elif [[ "$arg" == "-a" || "$arg" == "--all" ]]; then
@@ -209,12 +223,12 @@ for a in "$@"; do
 		BUILD_REGULAR=y
 		BUILD_DEBUG=y
 		BUILD_SIZE=y
-		BUILD_OPTIMISED=y
+		BUILD_OPT=y
 	elif [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
 		usage
 		exit 2
 	else
-		fatal2 "Unrecognised argument $arg"
+		fatal_early "Unrecognised argument $arg"
 		exit 1
 	fi
 done
@@ -226,7 +240,7 @@ if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
 if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
 if [[ -z "$BUILD_DEBUG" ]]; then BUILD_DEBUG=n; fi
 if [[ -z "$BUILD_SIZE" ]]; then BUILD_SIZE=n; fi
-if [[ -z "$BUILD_OPTIMISED" ]]; then BUILD_OPTIMISED=n; fi
+if [[ -z "$BUILD_OPT" ]]; then BUILD_OPT=n; fi
 if [[ -z "$J" ]]; then J=1; fi
 for opt in $DEV_BUILD \
 	$NEW_DYNAREC \
@@ -237,14 +251,14 @@ for opt in $DEV_BUILD \
 	$BUILD_SIZE \
 	$BUILD_OPTIMISED; \
 do
-	checkyn $opt
+	check_yn $opt
 done
 scriptdate s
-list "Root dir: $ROOTDIR"
-list "Source dir: $SRCDIR"
-list "Output dir: $OUTDIR"
-list "ROM dir: $ROMDIR"
-cd $ROOTDIR
+list "Root dir: $ROOT_DIR"
+list "Source dir: $SRC_DIR"
+list "Output dir: $OUT_DIR"
+list "ROM dir: $ROM_DIR"
+cd $ROOT_DIR
 if [[ $X64 == y ]]; then
 	list "Target arch: MinGW 64 bit"
 else
@@ -257,13 +271,13 @@ if [[ $UPDATE_REPO == y ]]; then
 	log "Repo update completed"
 fi
 gitrev "sources"
-echo "source commit: $(git rev-parse HEAD)" > $OUTDIR/commit_id
+echo "source commit: $(git rev-parse HEAD)" > $OUT_DIR/commit_id
 log "Switching to source dir"
-run "cd $SRCDIR"
-if [[ $BUILD_REGULAR == y && \
-	$BUILD_DEBUG == y && \
-	$BUILD_SIZE == y && \
-	$BUILD_OPTIMISED == y ]]; then
+run "cd $SRC_DIR"
+if [[ $BUILD_REGULAR == y || \
+	$BUILD_DEBUG == y || \
+	$BUILD_SIZE == y || \
+	$BUILD_OPT == y ]]; then
 	log "Building with $J CPU thread(s)"
 fi
 if [[ $NEW_DYNAREC == y ]]; then
@@ -278,7 +292,7 @@ if [[ $BUILD_REGULAR == y ]]; then
 	fi
 	log "Regular build in progress"
 	build n n n
-	run "cp 86Box.exe $OUTDIR/$outexe"
+	run "cp 86Box.exe $OUT_DIR/$outexe"
 	log "Regular build completed"
 fi
 if [[ $BUILD_DEBUG == y ]]; then
@@ -290,7 +304,7 @@ if [[ $BUILD_DEBUG == y ]]; then
 	fi
 	log "Debug build in progress"
 	build y n g
-	run "cp 86Box.exe $OUTDIR/$outexe"
+	run "cp 86Box.exe $OUT_DIR/$outexe"
 	log "Debug build completed"
 fi
 if [[ $BUILD_SIZE == y ]]; then
@@ -302,10 +316,10 @@ if [[ $BUILD_SIZE == y ]]; then
 	fi
 	log "Size-optimised build in progress"
 	build n n s
-	run "cp 86Box.exe $OUTDIR/$outexe"
+	run "cp 86Box.exe $OUT_DIR/$outexe"
 	log "Size-optimised build completed"
 fi
-if [[ $BUILD_OPTIMISED == y ]]; then
+if [[ $BUILD_OPT == y ]]; then
 	proc=build_o
 	if [[ $X64 == y ]]; then
 		outexe=86Box_opt_64.exe
@@ -314,13 +328,13 @@ if [[ $BUILD_OPTIMISED == y ]]; then
 	fi
 	log "Optimised build in progress"
 	build n y n
-	run "cp 86Box.exe $OUTDIR/$outexe"
+	run "cp 86Box.exe $OUT_DIR/$outexe"
 	log "Optimised build completed"
 fi
 if [[ $UPDATE_ROMS == y ]]; then
 	proc=roms
 	log "Switching to ROM dir"
-	run "cd $ROMDIR"
+	run "cd $ROM_DIR"
 	log "ROM update in progress"
 	run "git pull -q"
 	log "ROM update completed"
