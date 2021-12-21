@@ -35,13 +35,12 @@ usage()
 	echo "    BUILD_OPT     Build a CPU-optimised executable."
 	echo ""
 	echo "Available paths:"
-	echo "    ROOT_DIR  Build root directory (default: the folder where this script is run from)."
-	echo "    SRC_DIR   Source files directory (makefile builds only, default: $ROOT_DIR/src)."
-	echo "    BUILD_DIR CMake build directory (CMake builds only, default: $ROOT_DIR/build)."
-	echo "    OUT_DIR   Build output directory (default: $ROOT_DIR/out)."
-	echo "    ROM_DIR   ROM repository directory (default: $OUT_DIR/roms)."
-	echo "    MAKEFILE  Makefile (makefile builds only, default: $SRC_DIR/win/Makefile.mingw)."
-	echo ""
+	echo "    ROOT_DIR  Root directory (default: the folder that this script is run from)."
+	echo "    SRC_DIR   Source directory (makefile builds, default: \$ROOT_DIR/src)."
+	echo "    BUILD_DIR CMake directory (CMake builds, default: \$ROOT_DIR/build)."
+	echo "    OUT_DIR   Build output directory (default: \$ROOT_DIR/out)."
+	echo "    ROM_DIR   ROM repository directory (default: \$OUT_DIR/roms)."
+	echo "    MAKEFILE  Makefile (makefile builds, default: \$SRC_DIR/win/Makefile.mingw)."
 }
 
 printb()
@@ -139,6 +138,17 @@ gitrev()
 }
 
 # script exec
+SECONDS=0
+proc=start
+
+for a in "$@"; do
+	if [[ "$a" == "-h" || "$a" == "--help" ]]; then
+		usage
+		exit 2
+	fi
+done
+
+# print banner
 echo ""
 echo "*********************************"
 echo "*                               *"
@@ -146,11 +156,7 @@ echo "* 86Box unofficial build script *"
 echo "*                               *"
 echo "*********************************"
 echo ""
-SECONDS=0
-proc=start
-if [[ ! -f "$MAKEFILE" ]]; then
-	fatal_early "Could not find makefile \"$MAKEFILE\""
-fi
+
 if [[ $(UNAME -s) == "MINGW64"* ]]; then
 	X64=y
 elif [[ $(UNAME -s) == "MINGW32"* ]]; then
@@ -158,6 +164,7 @@ elif [[ $(UNAME -s) == "MINGW32"* ]]; then
 else
 	fatal_early "Unknown target platform"
 fi
+
 if [[ $# == 0 && UPDATE_REPO == "" && UPDATE_ROMS == "" && BUILD_REGULAR == "" ]]; then
 	log "No arguments specified, using defaults"
 	if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
@@ -168,10 +175,7 @@ fi
 # iterate arguments list
 for a in "$@"; do
 	arg=$a
-	if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
-		usage
-		exit 2
-	elif [[ "$arg" == "CMAKE="* ]]; then
+	if [[ "$arg" == "CMAKE="* ]]; then
 		CMAKE="${arg/'CMAKE='}"
 	elif [[ "$arg" == "DEV_BUILD="* ]]; then
 		DEV_BUILD="${arg/'DEV_BUILD='}"
