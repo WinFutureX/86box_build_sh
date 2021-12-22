@@ -113,15 +113,31 @@ build()
 	clean
 	if [[ $3 == o ]]; then
 		log "build: all optimisations off"
-		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-O0"
+		if [[ $CMAKE == y ]]; then
+			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-O0 && cd $BUILD_DIR && make -j$J"
+		else
+			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-O0"
+		fi
 	elif [[ $3 == s ]]; then
 		log "build: optimising for code size"
-		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Os"
+		if [[ $CMAKE == y ]]; then
+			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Os && cd $BUILD_DIR && make -j$J"
+		else
+			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Os"
+		fi
 	elif [[ $3 == g ]]; then
 		log "build: optimising for debugging"
-		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Og"
+		if [[ $CMAKE == y ]]; then
+			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Og && cd $BUILD_DIR && make -j$J"
+		else
+			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Og"
+		fi
 	else
-		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
+		if [[ $CMAKE == y ]]; then
+			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG && cd $BUILD_DIR && make -j$J"
+		else
+			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
+		fi
 	fi
 	run "$cmd"
 }
@@ -341,8 +357,10 @@ if [[ $UPDATE_REPO == y ]]; then
 fi
 gitrev "sources"
 echo "source commit: $(git rev-parse HEAD)" > $OUT_DIR/commit_id
-log "Switching to source dir"
-run "cd $SRC_DIR"
+if [[ $CMAKE == n ]]; then
+	log "Switching to source dir"
+	run "cd $SRC_DIR"
+fi
 if [[ $BUILD_REGULAR == y || \
 	$BUILD_DEBUG == y || \
 	$BUILD_SIZE == y || \
@@ -361,7 +379,11 @@ if [[ $BUILD_REGULAR == y ]]; then
 	fi
 	log "Regular build in progress"
 	build n n n
-	run "cp 86Box.exe $OUT_DIR/$outexe"
+	if [[ $CMAKE == y ]]; then
+		run "cp $BUILD_DIR/86Box.exe $OUT_DIR/$outexe"
+	else
+		run "cp $SRC_DIR/86Box.exe $OUT_DIR/$outexe"
+	fi
 	log "Regular build completed"
 fi
 if [[ $BUILD_DEBUG == y ]]; then
@@ -373,7 +395,11 @@ if [[ $BUILD_DEBUG == y ]]; then
 	fi
 	log "Debug build in progress"
 	build y n g
-	run "cp 86Box.exe $OUT_DIR/$outexe"
+	if [[ $CMAKE == y ]]; then
+		run "cp $BUILD_DIR/86Box.exe $OUT_DIR/$outexe"
+	else
+		run "cp $SRC_DIR/86Box.exe $OUT_DIR/$outexe"
+	fi
 	log "Debug build completed"
 fi
 if [[ $BUILD_SIZE == y ]]; then
@@ -385,7 +411,11 @@ if [[ $BUILD_SIZE == y ]]; then
 	fi
 	log "Size-optimised build in progress"
 	build n n s
-	run "cp 86Box.exe $OUT_DIR/$outexe"
+	if [[ $CMAKE == y ]]; then
+		run "cp $BUILD_DIR/86Box.exe $OUT_DIR/$outexe"
+	else
+		run "cp $SRC_DIR/86Box.exe $OUT_DIR/$outexe"
+	fi
 	log "Size-optimised build completed"
 fi
 if [[ $BUILD_OPT == y ]]; then
@@ -397,7 +427,11 @@ if [[ $BUILD_OPT == y ]]; then
 	fi
 	log "Optimised build in progress"
 	build n y n
-	run "cp 86Box.exe $OUT_DIR/$outexe"
+	if [[ $CMAKE == y ]]; then
+		run "cp $BUILD_DIR/86Box.exe $OUT_DIR/$outexe"
+	else
+		run "cp $SRC_DIR/86Box.exe $OUT_DIR/$outexe"
+	fi
 	log "Optimised build completed"
 fi
 if [[ $UPDATE_ROMS == y ]]; then
