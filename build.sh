@@ -191,7 +191,7 @@ for a in "$@"; do
 		BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
 	elif [[ "$arg" == "BUILD_SIZE="* ]]; then
 		BUILD_SIZE="${arg/'BUILD_SIZE='}"
-	elif [[ "$arg" == "BUILD_OPTIMISED="* ]]; then
+	elif [[ "$arg" == "BUILD_OPT="* ]]; then
 		BUILD_OPT="${arg/'BUILD_OPT='}"
 	elif [[ "$arg" == "ROOT_DIR="* ]]; then
 		ROOT_DIR="${arg/'ROOT_DIR='}"
@@ -253,7 +253,7 @@ for opt in $CMAKE \
 	$BUILD_REGULAR \
 	$BUILD_DEBUG \
 	$BUILD_SIZE \
-	$BUILD_OPTIMISED; \
+	$BUILD_OPT; \
 do
 	check_yn $opt
 done
