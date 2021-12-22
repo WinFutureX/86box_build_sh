@@ -119,10 +119,6 @@ build()
 		cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
 	fi
 	run "$cmd"
-	exit=$?
-	if (( $exit != 0 )); then
-		fatal "build error occurred, exit code is $exit"
-	fi
 }
 
 script_date()
@@ -175,50 +171,112 @@ fi
 # iterate arguments list
 for a in "$@"; do
 	arg=$a
-	if [[ "$arg" == "CMAKE="* ]]; then
-		CMAKE="${arg/'CMAKE='}"
-	elif [[ "$arg" == "DEV_BUILD="* ]]; then
-		DEV_BUILD="${arg/'DEV_BUILD='}"
-	elif [[ "$arg" == "NEW_DYNAREC="* ]]; then
-		NEW_DYNAREC="${arg/'NEW_DYNAREC='}"
-	elif [[ "$arg" == "UPDATE_REPO="* ]]; then
-		UPDATE_REPO="${arg/'UPDATE_REPO='}"
-	elif [[ "$arg" == "UPDATE_ROMS="* ]]; then
-		UPDATE_ROMS="${arg/'UPDATE_ROMS='}"
-	elif [[ "$arg" == "BUILD_REGULAR="* ]]; then
-		BUILD_REGULAR="${arg/'BUILD_REGULAR='}"
-	elif [[ "$arg" == "BUILD_DEBUG="* ]]; then
-		BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
-	elif [[ "$arg" == "BUILD_SIZE="* ]]; then
-		BUILD_SIZE="${arg/'BUILD_SIZE='}"
-	elif [[ "$arg" == "BUILD_OPT="* ]]; then
-		BUILD_OPT="${arg/'BUILD_OPT='}"
-	elif [[ "$arg" == "ROOT_DIR="* ]]; then
-		ROOT_DIR="${arg/'ROOT_DIR='}"
-	elif [[ "$arg" == "SRC_DIR="* ]]; then
-		SRC_DIR="${arg/'SRC_DIR='}"
-	elif [[ "$arg" == "BUILD_DIR="* ]]; then
-		BUILD_DIR="${arg/'BUILD_DIR='}"
-	elif [[ "$arg" == "OUT_DIR="* ]]; then
-		OUT_DIR="${arg/'OUT_DIR='}"
-	elif [[ "$arg" == "ROM_DIR="* ]]; then
-		ROM_DIR="${arg/'ROM_DIR='}"
-	elif [[ "$arg" == "MAKEFILE="* ]]; then
-		MAKEFILE="${arg/'MAKEFILE='}"
-	elif [[ "$arg" == "-j"* ]]; then
-		J="${arg//[^0-9]/}"
-	elif [[ "$arg" == "-a" || "$arg" == "--all" ]]; then
-		DEV_BUILD=y
-		UPDATE_REPO=y
-		UPDATE_ROMS=y
-		BUILD_REGULAR=y
-		BUILD_DEBUG=y
-		BUILD_SIZE=y
-		BUILD_OPT=y
-	else
-		fatal_early "Unrecognised argument $arg"
-		exit 1
-	fi
+	#if [[ "$arg" == "CMAKE="* ]]; then
+	#	CMAKE="${arg/'CMAKE='}"
+	#elif [[ "$arg" == "DEV_BUILD="* ]]; then
+	#	DEV_BUILD="${arg/'DEV_BUILD='}"
+	#elif [[ "$arg" == "NEW_DYNAREC="* ]]; then
+	#	NEW_DYNAREC="${arg/'NEW_DYNAREC='}"
+	#elif [[ "$arg" == "UPDATE_REPO="* ]]; then
+	#	UPDATE_REPO="${arg/'UPDATE_REPO='}"
+	#elif [[ "$arg" == "UPDATE_ROMS="* ]]; then
+	#	UPDATE_ROMS="${arg/'UPDATE_ROMS='}"
+	#elif [[ "$arg" == "BUILD_REGULAR="* ]]; then
+	#	BUILD_REGULAR="${arg/'BUILD_REGULAR='}"
+	#elif [[ "$arg" == "BUILD_DEBUG="* ]]; then
+	#	BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
+	#elif [[ "$arg" == "BUILD_SIZE="* ]]; then
+	#	BUILD_SIZE="${arg/'BUILD_SIZE='}"
+	#elif [[ "$arg" == "BUILD_OPT="* ]]; then
+	#	BUILD_OPT="${arg/'BUILD_OPT='}"
+	#elif [[ "$arg" == "ROOT_DIR="* ]]; then
+	#	ROOT_DIR="${arg/'ROOT_DIR='}"
+	#elif [[ "$arg" == "SRC_DIR="* ]]; then
+	#	SRC_DIR="${arg/'SRC_DIR='}"
+	#elif [[ "$arg" == "BUILD_DIR="* ]]; then
+	#	BUILD_DIR="${arg/'BUILD_DIR='}"
+	#elif [[ "$arg" == "OUT_DIR="* ]]; then
+	#	OUT_DIR="${arg/'OUT_DIR='}"
+	#elif [[ "$arg" == "ROM_DIR="* ]]; then
+	#	ROM_DIR="${arg/'ROM_DIR='}"
+	#elif [[ "$arg" == "MAKEFILE="* ]]; then
+	#	MAKEFILE="${arg/'MAKEFILE='}"
+	#elif [[ "$arg" == "-j"* ]]; then
+	#	J="${arg//[^0-9]/}"
+	#elif [[ "$arg" == "-a" || "$arg" == "--all" ]]; then
+	#	DEV_BUILD=y
+	#	UPDATE_REPO=y
+	#	UPDATE_ROMS=y
+	#	BUILD_REGULAR=y
+	#	BUILD_DEBUG=y
+	#	BUILD_SIZE=y
+	#	BUILD_OPT=y
+	#else
+	#	fatal_early "Unrecognised argument $arg"
+	#	exit 1
+	#fi
+	case arg in
+		"CMAKE=")
+			CMAKE="${arg/'CMAKE='}"
+			;;
+		"DEV_BUILD=")
+			DEV_BUILD="${arg/'DEV_BUILD='}"
+			;;
+		"NEW_DYNAREC=")
+			NEW_DYNAREC="${arg/'NEW_DYNAREC='}"
+			;;
+		"UPDATE_REPO=")
+			UPDATE_REPO="${arg/'UPDATE_REPO='}"
+			;;
+		"UPDATE_ROMS=")
+			UPDATE_ROMS="${arg/'UPDATE_ROMS='}"
+			;;
+		"BUILD_REGULAR=")
+			BUILD_REGULAR="${arg/'BUILD_REGULAR='}"
+			;;
+		"BUILD_DEBUG=")
+			BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
+			;;
+		"BUILD_SIZE=")
+			BUILD_SIZE="${arg/'BUILD_SIZE='}"
+			;;
+		"BUILD_OPT=")
+			BUILD_OPT="${arg/'BUILD_OPT='}"
+			;;
+		"ROOT_DIR=")
+			ROOT_DIR="${arg/'ROOT_DIR='}"
+			;;
+		"SRC_DIR=")
+			SRC_DIR="${arg/'SRC_DIR='}"
+			;;
+		"BUILD_DIR=")
+			BUILD_DIR="${arg/'BUILD_DIR='}"
+			;;
+		"OUT_DIR=")
+			OUT_DIR="${arg/'OUT_DIR='}"
+			;;
+		"ROM_DIR=")
+			ROM_DIR="${arg/'ROM_DIR='}"
+			;;
+		"MAKEFILE=")
+			MAKEFILE="${arg/'MAKEFILE='}"
+			;;
+		"-j")
+			J="${arg//[^0-9]/}"
+			;;
+		"-a" | "--all")
+			DEV_BUILD=y
+			UPDATE_REPO=y
+			UPDATE_ROMS=y
+			BUILD_REGULAR=y
+			BUILD_DEBUG=y
+			BUILD_SIZE=y
+			BUILD_OPT=y
+			;;
+		*)
+			fatal_early "Unrecognised argument $arg"
+			;;
+	esac
 done
 
 # set defaults
