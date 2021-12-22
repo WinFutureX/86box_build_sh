@@ -14,7 +14,10 @@ trap abort INT
 # func defs
 usage()
 {
-	echo "Usage: ./build.sh [OPTIONS] [-a/--all]"
+	echo "Usage:"
+	echo "    ./build.sh [OPTIONS]"
+	echo "    - or -"
+	echo "    ./build.sh [-a/--all]"
 	echo ""
 	echo "    -a, --all: updates all repos and build all targets."
 	echo ""
