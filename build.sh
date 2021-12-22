@@ -184,9 +184,9 @@ fi
 
 if [[ $# == 0 && UPDATE_REPO == "" && UPDATE_ROMS == "" && BUILD_REGULAR == "" ]]; then
 	log "No arguments specified, using defaults"
-	if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
-	if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
-	if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
+	UPDATE_REPO=y
+	UPDATE_ROMS=y
+	BUILD_REGULAR=y
 fi
 
 # iterate arguments list
