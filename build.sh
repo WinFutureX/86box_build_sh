@@ -1,15 +1,7 @@
 #!/bin/bash
 
-# dir defs (todo: remove this)
-#ROOT_DIR=~/86Box
-#SRC_DIR=$ROOT_DIR/src
-#BUILD_DIR=$ROOT_DIR/build # cmake builds only
-#OUT_DIR=$ROOT_DIR/out
-#ROM_DIR=$OUT_DIR/roms
-#MAKEFILE=$SRC_DIR/win/Makefile.mingw # todo: allow makefiles other than default
-
 # trap defs
-trap abort INT
+trap catch_ctrl_c INT
 
 # func defs
 usage()
@@ -81,7 +73,7 @@ fatal_early()
 	exit 1
 }
 
-abort()
+catch_ctrl_c()
 {
 	fatal "Script interrupted by user"
 }
@@ -175,41 +167,6 @@ echo "*                               *"
 echo "*********************************"
 echo ""
 
-# os detection
-if [[ $(UNAME -s) == "MINGW"* ]]; then
-	platform=windows
-	log "Platform: Windows"
-elif [[ $(UNAME -s) == "Linux" ]]; then
-	platform=linux
-	log "Platform: Linux"
-elif [[ $(UNAME -s) == "Darwin" ]]; then
-	platform=macos
-	log "Platform: macOS"
-else
-	fatal_early "Unknown target platform"
-fi
-
-# cpu arch detection
-cpu=$(UNAME -m)
-case $cpu in
-	"i686")
-		log "CPU: x86 (32 bit)"
-		;;
-	"x86_64")
-		if [[ $(UNAME -s) == "MINGW64"* ]]; then X64=y; fi
-		log "CPU: x86 (64 bit)"
-		;;
-	"armv7l")
-		log "CPU: ARMv7"
-		;;
-	"arm64" | "aarch64")
-		log "CPU: ARMv8"
-		;;
-	*)
-		fatal_early "Unknown target CPU"
-		;;
-esac
-
 if [[ $# == 0 ]]; then
 	log "No arguments specified, using defaults"
 	UPDATE_REPO=y
@@ -220,50 +177,6 @@ fi
 # iterate arguments list
 for a in "$@"; do
 	arg=$a
-	#if [[ "$arg" == "CMAKE="* ]]; then
-	#	CMAKE="${arg/'CMAKE='}"
-	#elif [[ "$arg" == "DEV_BUILD="* ]]; then
-	#	DEV_BUILD="${arg/'DEV_BUILD='}"
-	#elif [[ "$arg" == "NEW_DYNAREC="* ]]; then
-	#	NEW_DYNAREC="${arg/'NEW_DYNAREC='}"
-	#elif [[ "$arg" == "UPDATE_REPO="* ]]; then
-	#	UPDATE_REPO="${arg/'UPDATE_REPO='}"
-	#elif [[ "$arg" == "UPDATE_ROMS="* ]]; then
-	#	UPDATE_ROMS="${arg/'UPDATE_ROMS='}"
-	#elif [[ "$arg" == "BUILD_REGULAR="* ]]; then
-	#	BUILD_REGULAR="${arg/'BUILD_REGULAR='}"
-	#elif [[ "$arg" == "BUILD_DEBUG="* ]]; then
-	#	BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
-	#elif [[ "$arg" == "BUILD_SIZE="* ]]; then
-	#	BUILD_SIZE="${arg/'BUILD_SIZE='}"
-	#elif [[ "$arg" == "BUILD_OPT="* ]]; then
-	#	BUILD_OPT="${arg/'BUILD_OPT='}"
-	#elif [[ "$arg" == "ROOT_DIR="* ]]; then
-	#	ROOT_DIR="${arg/'ROOT_DIR='}"
-	#elif [[ "$arg" == "SRC_DIR="* ]]; then
-	#	SRC_DIR="${arg/'SRC_DIR='}"
-	#elif [[ "$arg" == "BUILD_DIR="* ]]; then
-	#	BUILD_DIR="${arg/'BUILD_DIR='}"
-	#elif [[ "$arg" == "OUT_DIR="* ]]; then
-	#	OUT_DIR="${arg/'OUT_DIR='}"
-	#elif [[ "$arg" == "ROM_DIR="* ]]; then
-	#	ROM_DIR="${arg/'ROM_DIR='}"
-	#elif [[ "$arg" == "MAKEFILE="* ]]; then
-	#	MAKEFILE="${arg/'MAKEFILE='}"
-	#elif [[ "$arg" == "-j"* ]]; then
-	#	J="${arg//[^0-9]/}"
-	#elif [[ "$arg" == "-a" || "$arg" == "--all" ]]; then
-	#	DEV_BUILD=y
-	#	UPDATE_REPO=y
-	#	UPDATE_ROMS=y
-	#	BUILD_REGULAR=y
-	#	BUILD_DEBUG=y
-	#	BUILD_SIZE=y
-	#	BUILD_OPT=y
-	#else
-	#	fatal_early "Unrecognised argument $arg"
-	#	exit 1
-	#fi
 	case $arg in
 		"CMAKE=")
 			CMAKE="${arg/'CMAKE='}"
@@ -332,9 +245,6 @@ done
 if [[ -z "$CMAKE" ]]; then if [[ "$platform" == windows ]]; then CMAKE=n; else CMAKE=y; fi; fi
 if [[ -z "$DEV_BUILD" ]]; then DEV_BUILD=n; fi
 if [[ -z "$NEW_DYNAREC" ]]; then NEW_DYNAREC=n; fi
-#if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
-#if [[ -z "$UPDATE_ROMS" ]]; then UPDATE_ROMS=y; fi
-#if [[ -z "$BUILD_REGULAR" ]]; then BUILD_REGULAR=y; fi
 if [[ -z "$BUILD_DEBUG" ]]; then BUILD_DEBUG=n; fi
 if [[ -z "$BUILD_SIZE" ]]; then BUILD_SIZE=n; fi
 if [[ -z "$BUILD_OPT" ]]; then BUILD_OPT=n; fi
@@ -367,6 +277,41 @@ do
 done
 
 script_date start
+
+# os detection
+if [[ $(UNAME -s) == "MINGW"* ]]; then
+	platform=windows
+	log "Platform: Windows"
+elif [[ $(UNAME -s) == "Linux" ]]; then
+	platform=linux
+	log "Platform: Linux"
+elif [[ $(UNAME -s) == "Darwin" ]]; then
+	platform=macos
+	log "Platform: macOS"
+else
+	fatal "Unknown target platform"
+fi
+
+# cpu arch detection
+cpu=$(UNAME -m)
+case $cpu in
+	"i686")
+		log "CPU: x86 (32 bit)"
+		;;
+	"x86_64")
+		if [[ $(UNAME -s) == "MINGW64"* ]]; then X64=y; fi
+		log "CPU: x86 (64 bit)"
+		;;
+	"armv7l")
+		log "CPU: ARMv7"
+		;;
+	"arm64" | "aarch64")
+		log "CPU: ARMv8"
+		;;
+	*)
+		fatal "Unknown target CPU"
+		;;
+esac
 
 if [[ "$CMAKE" == y ]]; then list "CMake build: enabled"; else list "CMake build: disabled"; fi
 
