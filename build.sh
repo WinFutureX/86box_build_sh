@@ -145,7 +145,7 @@ build()
 
 script_date()
 {
-	log "Script ${1}ed on $(date "+%a %Y-%m-%d %T")"
+	log "Script ${1}ed on $(date "+%A %Y-%m-%d %T")"
 }
 
 gitrev()
