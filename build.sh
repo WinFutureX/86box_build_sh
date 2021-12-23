@@ -71,13 +71,14 @@ warn()
 fatal()
 {
 	printb fatal "$1"
-	scriptdate e
+	script_date e
 	exit 1
 }
 
 fatal_early()
 {
 	printb fatal "$1"
+	exit 1
 }
 
 abort()
