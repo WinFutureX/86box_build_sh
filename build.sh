@@ -174,15 +174,42 @@ echo "*                               *"
 echo "*********************************"
 echo ""
 
-if [[ $(UNAME -s) == "MINGW64"* ]]; then
-	X64=y
-elif [[ $(UNAME -s) == "MINGW32"* ]]; then
-	X64=n
+# os detection
+if [[ $(UNAME -s) == "MINGW"* ]]; then
+	platform=windows
+	echo "Platform: Windows"
+elif [[ $(UNAME -s) == "Linux" ]]; then
+	platform=linux
+	echo "Platform: Linux"
+elif [[ $(UNAME -s) == "Darwin" ]]; then
+	platform=macos
+	echo "Platform: macOS"
 else
 	fatal_early "Unknown target platform"
 fi
 
-if [[ $# == 0 && UPDATE_REPO == "" && UPDATE_ROMS == "" && BUILD_REGULAR == "" ]]; then
+# cpu arch detection
+cpu=$(UNAME -m)
+case $cpu in
+	"i686")
+		echo "CPU: x86 (32 bit)"
+		;;
+	"x86_64")
+		X64=y
+		echo "CPU: x86 (64 bit)"
+		;;
+	"armv7l")
+		echo "CPU: ARMv7"
+		;;
+	"arm64" | "aarch64")
+		echo "CPU: ARMv8"
+		;;
+	*)
+		fatal_early "Unknown target CPU"
+		;;
+esac
+
+if [[ $# == 0 ]]; then
 	log "No arguments specified, using defaults"
 	UPDATE_REPO=y
 	UPDATE_ROMS=y
@@ -236,7 +263,7 @@ for a in "$@"; do
 	#	fatal_early "Unrecognised argument $arg"
 	#	exit 1
 	#fi
-	case arg in
+	case $arg in
 		"CMAKE=")
 			CMAKE="${arg/'CMAKE='}"
 			;;
@@ -338,17 +365,17 @@ do
 done
 
 script_date start
+
 list "Root dir: $ROOT_DIR"
 list "Source dir: $SRC_DIR"
 list "CMake build dir: $BUILD_DIR"
 list "Output dir: $OUT_DIR"
 list "ROM dir: $ROM_DIR"
+
+
+
 cd $ROOT_DIR
-if [[ $X64 == y ]]; then
-	list "Target arch: MinGW 64 bit"
-else
-	list "Target arch: MinGW 32 bit"
-fi
+
 if [[ $UPDATE_REPO == y ]]; then
 	proc=repo
 	log "Repo update in progress"
