@@ -71,7 +71,7 @@ warn()
 fatal()
 {
 	printb fatal "$1"
-	script_date e
+	script_date finish
 	exit 1
 }
 
@@ -196,7 +196,7 @@ case $cpu in
 		echo "CPU: x86 (32 bit)"
 		;;
 	"x86_64")
-		X64=y
+		if [[ $(UNAME -s) == "MINGW64"* ]]; then X64=y; fi
 		echo "CPU: x86 (64 bit)"
 		;;
 	"armv7l")
@@ -329,6 +329,7 @@ for a in "$@"; do
 done
 
 # set defaults
+if [[ -z "$CMAKE" && platform=windows ]]; then CMAKE=n; else CMAKE=y; fi
 if [[ -z "$DEV_BUILD" ]]; then DEV_BUILD=n; fi
 if [[ -z "$NEW_DYNAREC" ]]; then NEW_DYNAREC=n; fi
 #if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
@@ -372,8 +373,6 @@ list "Source dir: $SRC_DIR"
 list "CMake build dir: $BUILD_DIR"
 list "Output dir: $OUT_DIR"
 list "ROM dir: $ROM_DIR"
-
-
 
 cd $ROOT_DIR
 
