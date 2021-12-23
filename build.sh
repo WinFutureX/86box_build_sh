@@ -107,32 +107,43 @@ build()
 	if [[ $3 == o ]]; then
 		log "build: all optimisations off"
 		if [[ $CMAKE == y ]]; then
-			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-O0 && cd $BUILD_DIR && make -j$J"
+			run "cd $ROOT_DIR"
+			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-O0"
+			run "cd $BUILD_DIR"
+			run "make -j$J"
 		else
-			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-O0"
+			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-O0"
 		fi
 	elif [[ $3 == s ]]; then
 		log "build: optimising for code size"
 		if [[ $CMAKE == y ]]; then
-			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Os && cd $BUILD_DIR && make -j$J"
+			run "cd $ROOT_DIR"
+			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Os"
+			run "cd $BUILD_DIR"
+			run "make -j$J"
 		else
-			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Os"
+			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Os"
 		fi
 	elif [[ $3 == g ]]; then
 		log "build: optimising for debugging"
 		if [[ $CMAKE == y ]]; then
-			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Og && cd $BUILD_DIR && make -j$J"
+			run "cd $ROOT_DIR"
+			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Og"
+			run "cd $BUILD_DIR"
+			run "make -j$J"
 		else
-			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Og"
+			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Og"
 		fi
 	else
 		if [[ $CMAKE == y ]]; then
-			cmd="cd $ROOT_DIR && cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG && cd $BUILD_DIR && make -j$J"
+			run "cd $ROOT_DIR"
+			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG"
+			run "cd $BUILD_DIR"
+			run "make -j$J"
 		else
-			cmd="make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
+			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
 		fi
 	fi
-	run "$cmd"
 }
 
 script_date()
@@ -241,6 +252,41 @@ for a in "$@"; do
 	esac
 done
 
+# os detection
+if [[ $(UNAME -s) == "MINGW"* ]]; then
+	platform=windows
+	log "Platform: Windows"
+elif [[ $(UNAME -s) == "Linux" ]]; then
+	platform=linux
+	log "Platform: Linux"
+elif [[ $(UNAME -s) == "Darwin" ]]; then
+	platform=macos
+	log "Platform: macOS"
+else
+	fatal_early "Unknown target platform"
+fi
+
+# cpu arch detection
+cpu=$(UNAME -m)
+case $cpu in
+	"i686")
+		log "CPU: x86 (32 bit)"
+		;;
+	"x86_64")
+		if [[ $(UNAME -s) == "MINGW64"* ]]; then X64=y; fi
+		log "CPU: x86 (64 bit)"
+		;;
+	"armv7l")
+		log "CPU: ARMv7"
+		;;
+	"arm64" | "aarch64")
+		log "CPU: ARMv8"
+		;;
+	*)
+		fatal_early "Unknown target CPU"
+		;;
+esac
+
 # set defaults
 if [[ -z "$CMAKE" ]]; then if [[ "$platform" == windows ]]; then CMAKE=n; else CMAKE=y; fi; fi
 if [[ -z "$DEV_BUILD" ]]; then DEV_BUILD=n; fi
@@ -277,41 +323,6 @@ do
 done
 
 script_date start
-
-# os detection
-if [[ $(UNAME -s) == "MINGW"* ]]; then
-	platform=windows
-	log "Platform: Windows"
-elif [[ $(UNAME -s) == "Linux" ]]; then
-	platform=linux
-	log "Platform: Linux"
-elif [[ $(UNAME -s) == "Darwin" ]]; then
-	platform=macos
-	log "Platform: macOS"
-else
-	fatal "Unknown target platform"
-fi
-
-# cpu arch detection
-cpu=$(UNAME -m)
-case $cpu in
-	"i686")
-		log "CPU: x86 (32 bit)"
-		;;
-	"x86_64")
-		if [[ $(UNAME -s) == "MINGW64"* ]]; then X64=y; fi
-		log "CPU: x86 (64 bit)"
-		;;
-	"armv7l")
-		log "CPU: ARMv7"
-		;;
-	"arm64" | "aarch64")
-		log "CPU: ARMv8"
-		;;
-	*)
-		fatal "Unknown target CPU"
-		;;
-esac
 
 if [[ "$CMAKE" == y ]]; then list "CMake build: enabled"; else list "CMake build: disabled"; fi
 
