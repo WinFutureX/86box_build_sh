@@ -267,49 +267,49 @@ for a in "$@"; do
 		"CMAKE=")
 			CMAKE="${arg/'CMAKE='}"
 			;;
-		"DEV_BUILD=")
+		"DEV_BUILD="*)
 			DEV_BUILD="${arg/'DEV_BUILD='}"
 			;;
-		"NEW_DYNAREC=")
+		"NEW_DYNAREC="*)
 			NEW_DYNAREC="${arg/'NEW_DYNAREC='}"
 			;;
-		"UPDATE_REPO=")
+		"UPDATE_REPO="*)
 			UPDATE_REPO="${arg/'UPDATE_REPO='}"
 			;;
-		"UPDATE_ROMS=")
+		"UPDATE_ROMS="*)
 			UPDATE_ROMS="${arg/'UPDATE_ROMS='}"
 			;;
-		"BUILD_REGULAR=")
+		"BUILD_REGULAR="*)
 			BUILD_REGULAR="${arg/'BUILD_REGULAR='}"
 			;;
-		"BUILD_DEBUG=")
+		"BUILD_DEBUG="*)
 			BUILD_DEBUG="${arg/'BUILD_DEBUG='}"
 			;;
-		"BUILD_SIZE=")
+		"BUILD_SIZE="*)
 			BUILD_SIZE="${arg/'BUILD_SIZE='}"
 			;;
-		"BUILD_OPT=")
+		"BUILD_OPT="*)
 			BUILD_OPT="${arg/'BUILD_OPT='}"
 			;;
-		"ROOT_DIR=")
+		"ROOT_DIR="*)
 			ROOT_DIR="${arg/'ROOT_DIR='}"
 			;;
-		"SRC_DIR=")
+		"SRC_DIR="*)
 			SRC_DIR="${arg/'SRC_DIR='}"
 			;;
-		"BUILD_DIR=")
+		"BUILD_DIR="*)
 			BUILD_DIR="${arg/'BUILD_DIR='}"
 			;;
-		"OUT_DIR=")
+		"OUT_DIR="*)
 			OUT_DIR="${arg/'OUT_DIR='}"
 			;;
-		"ROM_DIR=")
+		"ROM_DIR="*)
 			ROM_DIR="${arg/'ROM_DIR='}"
 			;;
-		"MAKEFILE=")
+		"MAKEFILE="*)
 			MAKEFILE="${arg/'MAKEFILE='}"
 			;;
-		"-j")
+		"-j"*)
 			J="${arg//[^0-9]/}"
 			;;
 		"-a" | "--all")
