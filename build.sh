@@ -329,7 +329,7 @@ for a in "$@"; do
 done
 
 # set defaults
-if [[ -z "$CMAKE" && platform=windows ]]; then CMAKE=n; else CMAKE=y; fi
+if [[ -z "$CMAKE" && "$platform" == windows ]]; then CMAKE=n; else CMAKE=y; fi
 if [[ -z "$DEV_BUILD" ]]; then DEV_BUILD=n; fi
 if [[ -z "$NEW_DYNAREC" ]]; then NEW_DYNAREC=n; fi
 #if [[ -z "$UPDATE_REPO" ]]; then UPDATE_REPO=y; fi
