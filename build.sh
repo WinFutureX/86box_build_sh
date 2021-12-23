@@ -178,13 +178,13 @@ echo ""
 # os detection
 if [[ $(UNAME -s) == "MINGW"* ]]; then
 	platform=windows
-	echo "Platform: Windows"
+	log "Platform: Windows"
 elif [[ $(UNAME -s) == "Linux" ]]; then
 	platform=linux
-	echo "Platform: Linux"
+	log "Platform: Linux"
 elif [[ $(UNAME -s) == "Darwin" ]]; then
 	platform=macos
-	echo "Platform: macOS"
+	log "Platform: macOS"
 else
 	fatal_early "Unknown target platform"
 fi
@@ -193,17 +193,17 @@ fi
 cpu=$(UNAME -m)
 case $cpu in
 	"i686")
-		echo "CPU: x86 (32 bit)"
+		log "CPU: x86 (32 bit)"
 		;;
 	"x86_64")
 		if [[ $(UNAME -s) == "MINGW64"* ]]; then X64=y; fi
-		echo "CPU: x86 (64 bit)"
+		log "CPU: x86 (64 bit)"
 		;;
 	"armv7l")
-		echo "CPU: ARMv7"
+		log "CPU: ARMv7"
 		;;
 	"arm64" | "aarch64")
-		echo "CPU: ARMv8"
+		log "CPU: ARMv8"
 		;;
 	*)
 		fatal_early "Unknown target CPU"
