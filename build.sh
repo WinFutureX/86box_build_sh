@@ -108,7 +108,7 @@ build()
 		log "build: all optimisations off"
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-O0"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-O0"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
@@ -118,7 +118,7 @@ build()
 		log "build: optimising for code size"
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Os"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Os"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
@@ -128,7 +128,7 @@ build()
 		log "build: optimising for debugging"
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Og"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Og"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
@@ -137,7 +137,7 @@ build()
 	else
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G \"MSYS Makefiles\" -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
@@ -255,12 +255,15 @@ done
 # os detection
 if [[ $(UNAME -s) == "MINGW"* ]]; then
 	platform=windows
+	cmake_makefile_gen="MSYS Makefiles"
 	log "Platform: Windows"
 elif [[ $(UNAME -s) == "Linux" ]]; then
 	platform=linux
+	cmake_makefile_gen="Unix Makefiles"
 	log "Platform: Linux"
 elif [[ $(UNAME -s) == "Darwin" ]]; then
 	platform=macos
+	cmake_makefile_gen="Unix Makefiles"
 	log "Platform: macOS"
 else
 	fatal_early "Unknown target platform"
