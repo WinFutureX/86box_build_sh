@@ -108,40 +108,40 @@ build()
 		log "build: all optimisations off"
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-O0"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-O0"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
-			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-O0"
+			run "make -f $MAKEFILE -j$J DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-O0"
 		fi
 	elif [[ $3 == s ]]; then
 		log "build: optimising for code size"
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Os"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Os"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
-			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Os"
+			run "make -f $MAKEFILE -j$J DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Os"
 		fi
 	elif [[ $3 == g ]]; then
 		log "build: optimising for debugging"
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Og"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG -DCMAKE_CXXFLAGS=-Og"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
-			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Og"
+			run "make -f $MAKEFILE -j$J DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=n COPTIM=-Og"
 		fi
 	else
 		if [[ $CMAKE == y ]]; then
 			run "cd $ROOT_DIR"
-			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DVNC=n -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG"
+			run "cmake -G $cmake_makefile_gen -S $ROOT_DIR -B $BUILD_DIR -DDEV_BRANCH=$DEV_BUILD -DNEW_DYNAREC=$NEW_DYNAREC -DX64=$X64 -DDEBUG=$DEBUG"
 			run "cd $BUILD_DIR"
 			run "make -j$J"
 		else
-			run "make -f $MAKEFILE -j$J VNC=n DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
+			run "make -f $MAKEFILE -j$J DEV_BUILD=$DEV_BUILD NEW_DYNAREC=$NEW_DYNAREC X64=$X64 DEBUG=$1 OPTIM=$2"
 		fi
 	fi
 }
